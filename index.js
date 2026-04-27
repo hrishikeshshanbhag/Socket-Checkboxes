@@ -11,6 +11,8 @@ async function main() {
   //   checkboxes: new Array(CHECKBOX_SIZE).fill(false),
   // };
 
+  const rateLimitingMap = new Map();
+
   const app = express();
   const io = new Server();
   const server = http.createServer(app);
@@ -28,6 +30,17 @@ async function main() {
   io.on("connection", (socket) => {
     console.log(`Socket connected with socketid ${socket.id}`);
     socket.on("client:checkbox:clicked", async (data) => {
+      if (
+        rateLimitingMap.has(socket.id) &&
+        Date.now() - rateLimitingMap.get(socket.id) <= 5000
+      ) {
+        rateLimitingMap.set(socket.id, Date.now());
+        socket.emit("server:checkbox:too-many-request");
+        return;
+      } else {
+        rateLimitingMap.set(socket.id, Date.now());
+      }
+
       const exists = await redis.exists(CHECKBOX_KEY);
       const { index, checked } = data;
       if (!exists) {

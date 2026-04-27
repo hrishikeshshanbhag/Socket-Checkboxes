@@ -194,6 +194,9 @@
           checkbox.checked = checked;
         }
       });
+      socket.on("server:checkbox:too-many-request", () => {
+        alert("Too many request, try after 5 sec");
+      });
       window.addEventListener("load", async () => {
         const response = await fetch("/checkboxes", { method: "GET" });
         const data = await response.json();
